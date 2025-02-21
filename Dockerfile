@@ -13,53 +13,47 @@ FROM python:3.11-bullseye
 MAINTAINER Susanna Kiwala <ssiebert@wustl.edu>
 
 LABEL \
-    description="Image for pVACtools" \
-    version="3.0.0_mhci_3.1.2_mhcii_3.1.6"
+    description="Image for pVACtools with IEDB" \
+    version="5.1.0_mhci_3.1.6_mhcii_3.1.12"
 
 RUN apt-get update && apt-get install -y \
     tcsh \
     gcc \
     build-essential \
     zlib1g-dev \
-    gawk
+    gawk \
+    vim
 
 RUN mkdir /opt/iedb
 COPY LICENSE /opt/iedb/.
 
-#IEDB MHC I 3.1.2
+#IEDB MHC I 3.1.6
 WORKDIR /opt/iedb
-RUN wget https://downloads.iedb.org/tools/mhci/3.1.2/IEDB_MHC_I-3.1.2.tar.gz
-RUN tar -xzvf IEDB_MHC_I-3.1.2.tar.gz
+RUN wget https://downloads.iedb.org/tools/mhci/3.1.6/IEDB_MHC_I-3.1.6.tar.gz
+RUN tar -xzvf IEDB_MHC_I-3.1.6.tar.gz
 WORKDIR /opt/iedb/mhc_i
 RUN ./configure
 COPY netmhccons_1_1_python_interface.3.1.1.py /opt/iedb/mhc_i/method/netmhccons-1.1-executable/netmhccons_1_1_executable/netmhccons_1_1_python_interface.py
 WORKDIR /opt/iedb
-RUN rm IEDB_MHC_I-3.1.2.tar.gz
+RUN rm IEDB_MHC_I-3.1.6.tar.gz
 
-#IEDB MHC II 3.1.6
+#IEDB MHC II 3.1.12
 WORKDIR /opt/iedb
-RUN wget https://downloads.iedb.org/tools/mhcii/3.1.6/IEDB_MHC_II-3.1.6.tar.gz
-RUN tar -xzvf IEDB_MHC_II-3.1.6.tar.gz
+RUN wget https://downloads.iedb.org/tools/mhcii/3.1.12/IEDB_MHC_II-3.1.12.tar.gz
+RUN tar -xzvf IEDB_MHC_II-3.1.12.tar.gz
 WORKDIR /opt/iedb/mhc_ii
-RUN python ./configure.py
+RUN python ./configure.py -k netmhciipan -k smm -k nn
 WORKDIR /opt/iedb
-RUN rm IEDB_MHC_II-3.1.6.tar.gz
+RUN rm IEDB_MHC_II-3.1.12.tar.gz
 
-#BLAST
-WORKDIR /opt
-RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-x64-linux.tar.gz
-RUN tar zxvpf ncbi-blast-2.12.0+-x64-linux.tar.gz
-RUN rm ncbi-blast-2.12.0+-x64-linux.tar.gz
-RUN mkdir /opt/blastdb
-ENV BLASTDB=/opt/blastdb
-WORKDIR /opt/blastdb
-RUN perl /opt/ncbi-blast-2.12.0+/bin/update_blastdb.pl --passive --decompress refseq_select_prot
-
-#pVACtools 3.0.0
+#pVACtools 5.1.0
 RUN mkdir /opt/mhcflurry_data
 ENV MHCFLURRY_DATA_DIR=/opt/mhcflurry_data
-RUN pip install tensorflow==2.2.2
-RUN pip install pvactools==3.0.0
+#RUN pip install protobuf==3.20.0
+#RUN pip install tensorflow==2.2.2
+RUN pip install pvactools==5.1.0
+RUN pip install git+https://github.com/griffithlab/bigmhc.git#egg=bigmhc
+RUN pip install git+https://github.com/griffithlab/deepimmuno.git#egg=deepimmuno
 RUN mhcflurry-downloads fetch
 
 CMD ["/bin/bash"]
